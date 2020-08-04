@@ -1,9 +1,9 @@
 package com.thoughtworks.rslist.api;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.thoughtworks.rslist.RsEvent;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,18 +11,32 @@ import java.util.List;
 
 @RestController
 public class RsController {
-    private List<String> rsList = new ArrayList<>(Arrays.asList("第一条事件", "第二条事件", "第三条事件"));
+    private List<RsEvent> rsList = new ArrayList<>();
+
+    RsController() {
+        rsList.add(new RsEvent("第一条事件", "政治"));
+        rsList.add(new RsEvent("第二条事件", "科技"));
+        rsList.add(new RsEvent("第三条事件", "经济"));
+    }
 
     @GetMapping("/rs/{index}")
-    String getOneRs(@PathVariable int index) {
+    RsEvent getOneRs(@PathVariable int index) {
         return rsList.get(index - 1);
     }
 
     @GetMapping("/rs/list")
-    String getRsBetween(@RequestParam(required = false) Integer start, @RequestParam(required = false) Integer end) {
-        if (start == null && end == null) return rsList.toString();
-        if (start == null) return rsList.subList(0, end).toString();
-        if (end == null) return rsList.subList(start - 1, rsList.size()).toString();
-        return rsList.subList(start - 1, end).toString();
+    List<RsEvent> getRsBetween(@RequestParam(required = false) Integer start,
+                               @RequestParam(required = false) Integer end) {
+        if (start == null && end == null) return rsList;
+        if (start == null) return rsList.subList(0, end);
+        if (end == null) return rsList.subList(start - 1, rsList.size());
+        return rsList.subList(start - 1, end);
+    }
+
+    @PostMapping("/rs/add")
+    void addRs(@RequestBody String eventJson) throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        RsEvent newRsEvent = objectMapper.readValue(eventJson, RsEvent.class);
+        rsList.add(newRsEvent);
     }
 }
