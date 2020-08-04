@@ -44,12 +44,22 @@ public class RsController {
     void editRs(@RequestParam(required = true) int index, @RequestBody String eventJson) throws Exception {
         ObjectMapper objectMapper = new ObjectMapper();
         RsEvent newRsEvent = objectMapper.readValue(eventJson, RsEvent.class);
-        if (index < 0 || index > rsList.size()) {
-            throw new Exception("Error Request Param!");
-        }
+        checkIsInputIndexOutOfRange(index);
         if (newRsEvent.getEventName() != null)
             rsList.get(index - 1).setEventName(newRsEvent.getEventName());
         if (newRsEvent.getKeyWord() != null)
             rsList.get(index - 1).setKeyWord((newRsEvent.getKeyWord()));
+    }
+
+    @PostMapping("/rs/delete")
+    void deleteRs(@RequestParam(required = true)int index) throws Exception {
+        checkIsInputIndexOutOfRange(index);
+        rsList.remove(index-1);
+    }
+
+    void checkIsInputIndexOutOfRange(int index) throws Exception {
+        if (index < 1 || index > rsList.size()) {
+            throw new Exception("Error Request Param!");
+        }
     }
 }

@@ -1,13 +1,16 @@
 package com.thoughtworks.rslist;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -17,9 +20,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 class RsListApplicationTests {
-
     @Autowired
     MockMvc mockMvc;
+//    @Autowired
+//    WebApplicationContext webApplicationContext;
+
+//    @BeforeEach
+//    void setUp(){
+//        mockMvc= MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+//    }
 
     @Test
     void contextLoads() {
@@ -90,4 +99,12 @@ class RsListApplicationTests {
                 , is("经济"))).andExpect(status().isOk());
     }
 
+    @Test
+    void shouldDeleteRs() throws Exception {
+        mockMvc.perform(post("/rs/delete?index=1")).andExpect(status().isOk());
+        mockMvc.perform(get("/rs/list")).andExpect(jsonPath("$[0].eventName", is("第二条事件"))).andExpect(jsonPath("$[0].keyWord"
+                , is("科技"))).andExpect(jsonPath("$[1].eventName", is("第三条事件"))).andExpect(jsonPath("$[1].keyWord"
+                , is("经济"))).andExpect(status().isOk());
+
+    }
 }
