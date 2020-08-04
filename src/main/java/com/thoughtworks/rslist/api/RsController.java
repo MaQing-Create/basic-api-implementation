@@ -13,7 +13,7 @@ import java.util.List;
 public class RsController {
     private List<RsEvent> rsList = new ArrayList<>();
 
-    RsController() {
+    public RsController() {
         rsList.add(new RsEvent("第一条事件", "政治"));
         rsList.add(new RsEvent("第二条事件", "科技"));
         rsList.add(new RsEvent("第三条事件", "经济"));

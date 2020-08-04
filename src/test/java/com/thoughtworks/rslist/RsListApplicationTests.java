@@ -1,6 +1,7 @@
 package com.thoughtworks.rslist;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.thoughtworks.rslist.api.RsController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -20,15 +21,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 class RsListApplicationTests {
-    @Autowired
+    //@Autowired
     MockMvc mockMvc;
 //    @Autowired
 //    WebApplicationContext webApplicationContext;
 
-//    @BeforeEach
-//    void setUp(){
-//        mockMvc= MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
-//    }
+    @BeforeEach
+    void setUp(){
+        mockMvc = MockMvcBuilders.standaloneSetup(new RsController()).build();
+    }
 
     @Test
     void contextLoads() {
