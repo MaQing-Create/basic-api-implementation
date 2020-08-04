@@ -28,9 +28,9 @@ public class RsController {
     List<RsEvent> getRsBetween(@RequestParam(required = false) Integer start,
                                @RequestParam(required = false) Integer end) {
         if (start == null && end == null) return rsList;
-        if (start == null) return rsList.subList(0, end);
-        if (end == null) return rsList.subList(start - 1, rsList.size());
-        return rsList.subList(start - 1, end);
+        if (start == null) return rsList.subList(0, end > rsList.size() ? rsList.size() : end);
+        if (end == null) return rsList.subList(start < 1 ? 0 : start - 1, rsList.size());
+        return rsList.subList(start < 1 ? 0 : start - 1, end > rsList.size() ? rsList.size() : end);
     }
 
     @PostMapping("/rs/add")
@@ -38,5 +38,18 @@ public class RsController {
         ObjectMapper objectMapper = new ObjectMapper();
         RsEvent newRsEvent = objectMapper.readValue(eventJson, RsEvent.class);
         rsList.add(newRsEvent);
+    }
+
+    @PostMapping("/rs/list")
+    void editRs(@RequestParam(required = true) int index, @RequestBody String eventJson) throws Exception {
+        ObjectMapper objectMapper = new ObjectMapper();
+        RsEvent newRsEvent = objectMapper.readValue(eventJson, RsEvent.class);
+        if (index < 0 || index > rsList.size()) {
+            throw new Exception("Error Request Param!");
+        }
+        if (newRsEvent.getEventName() != null)
+            rsList.get(index - 1).setEventName(newRsEvent.getEventName());
+        if (newRsEvent.getKeyWord() != null)
+            rsList.get(index - 1).setKeyWord((newRsEvent.getKeyWord()));
     }
 }
