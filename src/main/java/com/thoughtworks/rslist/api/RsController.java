@@ -4,13 +4,15 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.rslist.domain.RsEvent;
 import com.thoughtworks.rslist.domain.User;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.thoughtworks.rslist.api.UserController.addUser;
+import static com.thoughtworks.rslist.tools.CommonMethods.getList;
 
 @RestController
 public class RsController {
@@ -32,24 +34,22 @@ public class RsController {
     }
 
     @GetMapping("/rs/{index}")
-    ResponseEntity<RsEvent> getOneRs(@PathVariable int index) {
+    ResponseEntity<RsEvent> getOneRs(@PathVariable int index) throws Exception {
+        checkIsInputIndexOutOfRange(index);
         return ResponseEntity.ok().body(rsList.get(index - 1));
     }
 
     @GetMapping("/rs/list")
-    ResponseEntity<List<RsEvent>> getRsBetween(@RequestParam(required = false) Integer start,
-                                               @RequestParam(required = false) Integer end) {
-        if (start == null && end == null) return ResponseEntity.ok().body(rsList);
-        if (start == null) return ResponseEntity.ok().body(rsList.subList(0, end > rsList.size() ? rsList.size() : end));
-        if (end == null) return ResponseEntity.ok().body(rsList.subList(start < 1 ? 0 : start - 1, rsList.size()));
-        return ResponseEntity.ok().body(rsList.subList(start < 1 ? 0 : start - 1, end > rsList.size() ? rsList.size() : end));
+    ResponseEntity<List> getRsBetween(@RequestParam(required = false) Integer start,
+                                      @RequestParam(required = false) Integer end) {
+        return getList(start, end, rsList);
     }
 
     @PostMapping("/rs/add")
     ResponseEntity addRs(@RequestBody @Valid RsEvent rsEvent) throws JsonProcessingException {
         rsList.add(rsEvent);
         addUser(rsEvent.getUser());
-        return ResponseEntity.created(null).body(rsList.size()-1);
+        return ResponseEntity.created(null).body(rsList.size() - 1);
     }
 
     @PostMapping("/rs/list")
@@ -71,12 +71,4 @@ public class RsController {
         return ResponseEntity.created(null).body(index);
     }
 
-    @PostMapping("/user")
-    ResponseEntity addUser(@RequestBody(required = true) @Valid User user) {
-        for (User userExist : userList) {
-            if (userExist.getUserName().equals(user.getUserName())) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-        userList.add(user);
-        return ResponseEntity.created(null).body(userList.size()-1);
-    }
 }
