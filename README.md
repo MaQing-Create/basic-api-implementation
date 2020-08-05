@@ -1,5 +1,3 @@
-### 作业描述
-
 #### 切换到课程对应的分支查看每节课的作业要求
 * Routing: routing
 * Data Binding: data-binding
