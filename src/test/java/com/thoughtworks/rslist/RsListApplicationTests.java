@@ -1,6 +1,5 @@
 package com.thoughtworks.rslist;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.rslist.api.RsController;
 import com.thoughtworks.rslist.domain.RsEvent;
@@ -68,7 +67,7 @@ class RsListApplicationTests {
         ObjectMapper objectMapper = new ObjectMapper();
         String eventJson = objectMapper.writeValueAsString(newRsEvent);
 
-        mockMvc.perform(post("/rs/add").content(eventJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
+        mockMvc.perform(post("/rs/add").content(eventJson).contentType(MediaType.APPLICATION_JSON)).andExpect(content().string("3")).andExpect(status().isCreated());
         mockMvc.perform(get("/rs/list")).andExpect(jsonPath("$[0].eventName", is("第一条事件"))).andExpect(jsonPath("$[0].keyWord"
                 , is("政治"))).andExpect(jsonPath("$[1].eventName", is("第二条事件"))).andExpect(jsonPath("$[1].keyWord"
                 , is("科技"))).andExpect(jsonPath("$[2].eventName", is("第三条事件"))).andExpect(jsonPath("$[2].keyWord"
@@ -81,17 +80,17 @@ class RsListApplicationTests {
         String eventJson1 = "{\"keyWord\":\"Economy\"}";
         String eventJson2 = "{\"eventName\":\"第3条事件\"}";
         String eventJson3 = "{\"eventName\":\"第三条事件\", \"keyWord\":\"经济\"}";
-        mockMvc.perform(post("/rs/list?index=3").content(eventJson1).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
+        mockMvc.perform(post("/rs/list?index=3").content(eventJson1).contentType(MediaType.APPLICATION_JSON)).andExpect(content().string("3")).andExpect(status().isCreated());
         mockMvc.perform(get("/rs/list")).andExpect(jsonPath("$[0].eventName", is("第一条事件"))).andExpect(jsonPath("$[0].keyWord"
                 , is("政治"))).andExpect(jsonPath("$[1].eventName", is("第二条事件"))).andExpect(jsonPath("$[1].keyWord"
                 , is("科技"))).andExpect(jsonPath("$[2].eventName", is("第三条事件"))).andExpect(jsonPath("$[2].keyWord"
                 , is("Economy"))).andExpect(status().isOk());
-        mockMvc.perform(post("/rs/list?index=3").content(eventJson2).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
+        mockMvc.perform(post("/rs/list?index=3").content(eventJson2).contentType(MediaType.APPLICATION_JSON)).andExpect(content().string("3")).andExpect(status().isCreated());
         mockMvc.perform(get("/rs/list")).andExpect(jsonPath("$[0].eventName", is("第一条事件"))).andExpect(jsonPath("$[0].keyWord"
                 , is("政治"))).andExpect(jsonPath("$[1].eventName", is("第二条事件"))).andExpect(jsonPath("$[1].keyWord"
                 , is("科技"))).andExpect(jsonPath("$[2].eventName", is("第3条事件"))).andExpect(jsonPath("$[2].keyWord"
                 , is("Economy"))).andExpect(status().isOk());
-        mockMvc.perform(post("/rs/list?index=3").content(eventJson3).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
+        mockMvc.perform(post("/rs/list?index=3").content(eventJson3).contentType(MediaType.APPLICATION_JSON)).andExpect(content().string("3")).andExpect(status().isCreated());
         mockMvc.perform(get("/rs/list")).andExpect(jsonPath("$[0].eventName", is("第一条事件"))).andExpect(jsonPath("$[0].keyWord"
                 , is("政治"))).andExpect(jsonPath("$[1].eventName", is("第二条事件"))).andExpect(jsonPath("$[1].keyWord"
                 , is("科技"))).andExpect(jsonPath("$[2].eventName", is("第三条事件"))).andExpect(jsonPath("$[2].keyWord"
@@ -100,7 +99,7 @@ class RsListApplicationTests {
 
     @Test
     void shouldDeleteRs() throws Exception {
-        mockMvc.perform(post("/rs/delete?index=1")).andExpect(status().isOk());
+        mockMvc.perform(post("/rs/delete?index=1")).andExpect(content().string("1")).andExpect(status().isCreated());
         mockMvc.perform(get("/rs/list")).andExpect(jsonPath("$[0].eventName", is("第二条事件"))).andExpect(jsonPath("$[0].keyWord"
                 , is("科技"))).andExpect(jsonPath("$[1].eventName", is("第三条事件"))).andExpect(jsonPath("$[1].keyWord"
                 , is("经济"))).andExpect(status().isOk());
@@ -112,7 +111,7 @@ class RsListApplicationTests {
         User user = new User("userName", 18, "male","user@email.com","10123456789");
         ObjectMapper objectMapper = new ObjectMapper();
         String userJson = objectMapper.writeValueAsString(user);
-        mockMvc.perform(post("/user").content(userJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
+        mockMvc.perform(post("/user").content(userJson).contentType(MediaType.APPLICATION_JSON)).andExpect(content().string("1")).andExpect(status().isCreated());
     }
 
     @Test

@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.rslist.domain.RsEvent;
 import com.thoughtworks.rslist.domain.User;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -20,6 +22,7 @@ public class RsController {
         rsList.add(new RsEvent("第一条事件", "政治", admin));
         rsList.add(new RsEvent("第二条事件", "科技", admin));
         rsList.add(new RsEvent("第三条事件", "经济", admin));
+        userList.add(admin);
     }
 
     private void checkIsInputIndexOutOfRange(int index) throws Exception {
@@ -29,27 +32,28 @@ public class RsController {
     }
 
     @GetMapping("/rs/{index}")
-    RsEvent getOneRs(@PathVariable int index) {
-        return rsList.get(index - 1);
+    ResponseEntity<RsEvent> getOneRs(@PathVariable int index) {
+        return ResponseEntity.ok().body(rsList.get(index - 1));
     }
 
     @GetMapping("/rs/list")
-    List<RsEvent> getRsBetween(@RequestParam(required = false) Integer start,
-                               @RequestParam(required = false) Integer end) {
-        if (start == null && end == null) return rsList;
-        if (start == null) return rsList.subList(0, end > rsList.size() ? rsList.size() : end);
-        if (end == null) return rsList.subList(start < 1 ? 0 : start - 1, rsList.size());
-        return rsList.subList(start < 1 ? 0 : start - 1, end > rsList.size() ? rsList.size() : end);
+    ResponseEntity<List<RsEvent>> getRsBetween(@RequestParam(required = false) Integer start,
+                                               @RequestParam(required = false) Integer end) {
+        if (start == null && end == null) return ResponseEntity.ok().body(rsList);
+        if (start == null) return ResponseEntity.ok().body(rsList.subList(0, end > rsList.size() ? rsList.size() : end));
+        if (end == null) return ResponseEntity.ok().body(rsList.subList(start < 1 ? 0 : start - 1, rsList.size()));
+        return ResponseEntity.ok().body(rsList.subList(start < 1 ? 0 : start - 1, end > rsList.size() ? rsList.size() : end));
     }
 
     @PostMapping("/rs/add")
-    void addRs(@RequestBody @Valid RsEvent rsEvent) throws JsonProcessingException {
+    ResponseEntity addRs(@RequestBody @Valid RsEvent rsEvent) throws JsonProcessingException {
         rsList.add(rsEvent);
         addUser(rsEvent.getUser());
+        return ResponseEntity.created(null).body(rsList.size()-1);
     }
 
     @PostMapping("/rs/list")
-    void editRs(@RequestParam(required = true) int index, @RequestBody String eventJson) throws Exception {
+    ResponseEntity editRs(@RequestParam(required = true) int index, @RequestBody String eventJson) throws Exception {
         ObjectMapper objectMapper = new ObjectMapper();
         RsEvent newRsEvent = objectMapper.readValue(eventJson, RsEvent.class);
         checkIsInputIndexOutOfRange(index);
@@ -57,19 +61,22 @@ public class RsController {
             rsList.get(index - 1).setEventName(newRsEvent.getEventName());
         if (newRsEvent.getKeyWord() != null)
             rsList.get(index - 1).setKeyWord((newRsEvent.getKeyWord()));
+        return ResponseEntity.created(null).body(index);
     }
 
     @PostMapping("/rs/delete")
-    void deleteRs(@RequestParam(required = true) int index) throws Exception {
+    ResponseEntity deleteRs(@RequestParam(required = true) int index) throws Exception {
         checkIsInputIndexOutOfRange(index);
         rsList.remove(index - 1);
+        return ResponseEntity.created(null).body(index);
     }
 
     @PostMapping("/user")
-    void addUser(@RequestBody(required = true) @Valid User user){
-        for (User userExist : userList){
-            if (userExist.getUserName().equals(user.getUserName())) return;
+    ResponseEntity addUser(@RequestBody(required = true) @Valid User user) {
+        for (User userExist : userList) {
+            if (userExist.getUserName().equals(user.getUserName())) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         userList.add(user);
+        return ResponseEntity.created(null).body(userList.size()-1);
     }
 }
