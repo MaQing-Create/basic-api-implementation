@@ -2,19 +2,30 @@ package com.thoughtworks.rslist.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.thoughtworks.rslist.RsEvent;
+import com.thoughtworks.rslist.domain.RsEvent;
+import com.thoughtworks.rslist.domain.User;
 import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
 
 @RestController
 public class RsController {
     private List<RsEvent> rsList = new ArrayList<>();
+    private List<User> userList = new ArrayList<>();
+    private User admin = new User("admin", 18, "male", "admin@email.com", "10123456789");
 
     public RsController() {
-        rsList.add(new RsEvent("第一条事件", "政治"));
-        rsList.add(new RsEvent("第二条事件", "科技"));
-        rsList.add(new RsEvent("第三条事件", "经济"));
+        rsList.add(new RsEvent("第一条事件", "政治", admin));
+        rsList.add(new RsEvent("第二条事件", "科技", admin));
+        rsList.add(new RsEvent("第三条事件", "经济", admin));
+    }
+
+    private void checkIsInputIndexOutOfRange(int index) throws Exception {
+        if (index < 1 || index > rsList.size()) {
+            throw new Exception("Error Request Param!");
+        }
     }
 
     @GetMapping("/rs/{index}")
@@ -32,10 +43,9 @@ public class RsController {
     }
 
     @PostMapping("/rs/add")
-    void addRs(@RequestBody String eventJson) throws JsonProcessingException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        RsEvent newRsEvent = objectMapper.readValue(eventJson, RsEvent.class);
-        rsList.add(newRsEvent);
+    void addRs(@RequestBody @Valid RsEvent rsEvent) throws JsonProcessingException {
+        rsList.add(rsEvent);
+        addUser(rsEvent.getUser());
     }
 
     @PostMapping("/rs/list")
@@ -50,14 +60,16 @@ public class RsController {
     }
 
     @PostMapping("/rs/delete")
-    void deleteRs(@RequestParam(required = true)int index) throws Exception {
+    void deleteRs(@RequestParam(required = true) int index) throws Exception {
         checkIsInputIndexOutOfRange(index);
-        rsList.remove(index-1);
+        rsList.remove(index - 1);
     }
 
-    void checkIsInputIndexOutOfRange(int index) throws Exception {
-        if (index < 1 || index > rsList.size()) {
-            throw new Exception("Error Request Param!");
+    @PostMapping("/user")
+    void addUser(@RequestBody(required = true) @Valid User user){
+        for (User userExist : userList){
+            if (userExist.getUserName().equals(user.getUserName())) return;
         }
+        userList.add(user);
     }
 }
