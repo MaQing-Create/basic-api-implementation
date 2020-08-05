@@ -13,14 +13,14 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-public class UserListApplicationTests {
+public class UserControllerTest {
     //@Autowired
     MockMvc mockMvc;
 
@@ -88,5 +88,13 @@ public class UserListApplicationTests {
         ObjectMapper objectMapper = new ObjectMapper();
         String userListString = objectMapper.writeValueAsString(userList);
         mockMvc.perform(get("/users")).andExpect(content().string(userListString)).andExpect(status().isOk());
+    }
+
+    @Test
+    void shouldThrowMethodArgumentNotValidExceptionWhenNotPassValidation() throws Exception {
+        User user = new User("userName", 18, "male", "useremail.com", "10123456789");
+        ObjectMapper objectMapper = new ObjectMapper();
+        String userJson = objectMapper.writeValueAsString(user);
+        mockMvc.perform(post("/user").content(userJson).contentType(MediaType.APPLICATION_JSON)).andExpect(jsonPath("$.error",is("invalid user"))).andExpect(status().isBadRequest());
     }
 }

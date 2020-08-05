@@ -2,8 +2,11 @@ package com.thoughtworks.rslist.api;
 
 import com.thoughtworks.rslist.domain.RsEvent;
 import com.thoughtworks.rslist.domain.User;
+import com.thoughtworks.rslist.exception.CommonException;
+import com.thoughtworks.rslist.exception.InvalidIndexException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -39,7 +42,14 @@ public class UserController {
 
     @GetMapping("/users")
     ResponseEntity<List> getUsers(@RequestParam(required = false) Integer start,
-                                  @RequestParam(required = false) Integer end) {
+                                  @RequestParam(required = false) Integer end) throws InvalidIndexException, Exception {
         return getList(start, end, userList);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    ResponseEntity userExceptionHandler(MethodArgumentNotValidException ex) {
+        CommonException commonException = new CommonException();
+        commonException.setError("invalid user");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(commonException);
     }
 }

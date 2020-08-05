@@ -27,14 +27,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class RsControllerTest {
 
-    //@Autowired
+    @Autowired
     MockMvc mockMvc;
 
     private User admin = new User("admin1", 18, "male", "admin@email.com", "10123456789");
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(new RsController()).build();
+//        mockMvc = MockMvcBuilders.standaloneSetup(new RsController()).build();
     }
 
     @Test
@@ -200,4 +200,25 @@ class RsControllerTest {
 
         mockMvc.perform(post("/rs/add").content(eventJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isBadRequest());
     }
+
+    @Test
+    void shouldThrowIndexExceptionWhenInputInvalidIndex() throws Exception {
+        mockMvc.perform(get("/rs/0"))
+                .andExpect(jsonPath("$.error",is("invalid index"))).andExpect(status().isBadRequest());
+        mockMvc.perform(get("/rs/list?start=0&end=2"))
+                .andExpect(jsonPath("$.error",is("invalid request param"))).andExpect(status().isBadRequest());
+        mockMvc.perform(get("/rs/list?start=1&end=5"))
+                .andExpect(jsonPath("$.error",is("invalid request param"))).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldThrowMethodArgumentNotValidExceptionWhenNotPassValidation() throws Exception {
+        RsEvent newRsEvent = new RsEvent("第四条事件", "军事", null);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String eventJson = objectMapper.writeValueAsString(newRsEvent);
+
+        mockMvc.perform(post("/rs/add").content(eventJson).contentType(MediaType.APPLICATION_JSON)).andExpect(jsonPath("$.error",is("invalid param"))).andExpect(status().isBadRequest());
+    }
+
 }
