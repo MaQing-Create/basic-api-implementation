@@ -32,11 +32,17 @@ public class RsEvent {
     @NotNull
     private Integer userId;
 
-    public RsEvent(RsEventEntity rsEventEntity){
+    private Integer voteNum = 0;
+
+    public RsEvent(RsEventEntity rsEventEntity) {
         this.eventName = rsEventEntity.getEventName();
         this.keyWord = rsEventEntity.getKeyWord();
+        this.userId = rsEventEntity.getUserId();
+    }
 
-
-
+    public RsEvent(@NotNull String eventName, @NotNull String keyWord, @NotNull Integer userId) {
+        this.eventName = eventName;
+        this.keyWord = keyWord;
+        this.userId = userId;
     }
 }

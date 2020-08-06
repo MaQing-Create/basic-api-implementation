@@ -8,6 +8,7 @@ import com.thoughtworks.rslist.entity.RsEventEntity;
 import com.thoughtworks.rslist.entity.UserEntity;
 import com.thoughtworks.rslist.repository.RsEventRspository;
 import com.thoughtworks.rslist.repository.UserRepository;
+import com.thoughtworks.rslist.repository.VoteRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,13 +38,23 @@ public class UserControllerTest {
     @Autowired
     RsEventRspository rsEventRepository;
 
-    private User admin = new User("admin1", 18, "male", "admin@email.com", "10123456789");
+    @Autowired
+    VoteRepository voteRepository;
+
+    private User admin = new User("admin", 18, "male", "admin@email.com", "10123456789");
+    private RsEvent event1 = new RsEvent("第一条事件", "政治", 1);
+    private RsEvent event2 = new RsEvent("第二条事件", "科技", 1);
+    private RsEvent event3 = new RsEvent("第三条事件", "经济", 1);
 
     @BeforeEach
     void setUp() {
+        voteRepository.deleteAll();
         userRepository.deleteAll();
         rsEventRepository.deleteAll();
-//        mockMvc = MockMvcBuilders.standaloneSetup(new UserController()).build();
+        userRepository.save(new UserEntity(admin));
+        rsEventRepository.save(new RsEventEntity(event1));
+        rsEventRepository.save(new RsEventEntity(event2));
+        rsEventRepository.save(new RsEventEntity(event3));
     }
 
     @Test
@@ -75,7 +86,16 @@ public class UserControllerTest {
         User user = new User("userName", 18, "male", "user@email.com", "10123456789");
         ObjectMapper objectMapper = new ObjectMapper();
         String userJson = objectMapper.writeValueAsString(user);
-        mockMvc.perform(post("/user").content(userJson).contentType(MediaType.APPLICATION_JSON)).andExpect(content().string("1")).andExpect(status().isCreated());
+        mockMvc.perform(post("/user").content(userJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isCreated());
+        assertEquals("userName", userRepository.getUsersByUserId(5).getUserName());
+    }
+
+    @Test
+    void shouldNotAddUserWhenUserExists() throws Exception {
+        User user = new User("admin", 18, "male", "user@email.com", "10123456789");
+        ObjectMapper objectMapper = new ObjectMapper();
+        String userJson = objectMapper.writeValueAsString(user);
+        mockMvc.perform(post("/user").content(userJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isBadRequest());
     }
 
     @Test
@@ -95,15 +115,16 @@ public class UserControllerTest {
     }
 
 
-    @Test
-    void shouldGetAllUser() throws Exception {
-        List<User> userList = new ArrayList<>();
-        User admin = new User("admin", 18, "male", "admin@email.com", "10123456789");
-        userList.add(admin);
-        ObjectMapper objectMapper = new ObjectMapper();
-        String userListString = objectMapper.writeValueAsString(userList);
-        mockMvc.perform(get("/users")).andExpect(content().string(userListString)).andExpect(status().isOk());
-    }
+//    @Test
+//    void shouldGetAllUser() throws Exception {
+//        List<User> userList = new ArrayList<>();
+//        User admin = new User("admin", 18, "male", "admin@email.com", "10123456789");
+//        userList.add(admin);
+//        ObjectMapper objectMapper = new ObjectMapper();
+//        String userListString = objectMapper.writeValueAsString(userList);
+//        mockMvc.perform(get("/users")).andExpect(content().string(userListString)).andExpect(status().isOk());
+//
+//    }
 
     @Test
     void shouldThrowMethodArgumentNotValidExceptionWhenNotPassValidation() throws Exception {
@@ -118,13 +139,13 @@ public class UserControllerTest {
         User user = new User("userName", 18, "male", "user@email.com", "10123456789");
         ObjectMapper objectMapper = new ObjectMapper();
         String userJson = objectMapper.writeValueAsString(user);
-        mockMvc.perform(post("/user").content(userJson).contentType(MediaType.APPLICATION_JSON)).andExpect(content().string("1")).andExpect(status().isCreated());
+        mockMvc.perform(post("/user").content(userJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isCreated());
         List<UserEntity> userListFromDatabase = userRepository.findAll();
-        assertEquals(userListFromDatabase.get(0).getUserName(), "userName");
-        assertEquals(userListFromDatabase.get(0).getAge(), 18);
-        assertEquals(userListFromDatabase.get(0).getGender(), "male");
-        assertEquals(userListFromDatabase.get(0).getEmail(), "user@email.com");
-        assertEquals(userListFromDatabase.get(0).getPhone(), "10123456789");
+        assertEquals(userListFromDatabase.get(1).getUserName(), "userName");
+        assertEquals(userListFromDatabase.get(1).getAge(), 18);
+        assertEquals(userListFromDatabase.get(1).getGender(), "male");
+        assertEquals(userListFromDatabase.get(1).getEmail(), "user@email.com");
+        assertEquals(userListFromDatabase.get(1).getPhone(), "10123456789");
     }
 
     @Test
@@ -133,8 +154,8 @@ public class UserControllerTest {
         ObjectMapper objectMapper = new ObjectMapper();
         String userJson = objectMapper.writeValueAsString(user);
 
-        mockMvc.perform(post("/user").content(userJson).contentType(MediaType.APPLICATION_JSON)).andExpect(content().string("1")).andExpect(status().isCreated());
-        mockMvc.perform(get("/user/1")).andExpect(jsonPath("$.userName",is("userName"))).andExpect(status().isOk());
+        mockMvc.perform(post("/user").content(userJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isCreated());
+        mockMvc.perform(get("/user/5")).andExpect(jsonPath("$.userName",is("userName"))).andExpect(status().isOk());
     }
 
     @Test
@@ -143,21 +164,21 @@ public class UserControllerTest {
         ObjectMapper objectMapper = new ObjectMapper();
         String userJson = objectMapper.writeValueAsString(user);
 
-        mockMvc.perform(post("/user").content(userJson).contentType(MediaType.APPLICATION_JSON)).andExpect(content().string("1")).andExpect(status().isCreated());
+        mockMvc.perform(post("/user").content(userJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isCreated());
+        assertEquals(userRepository.findAll().size(), 2);
+        mockMvc.perform(delete("/user/5")).andExpect(status().isOk());
         assertEquals(userRepository.findAll().size(), 1);
-        mockMvc.perform(delete("/user/1")).andExpect(status().isOk());
-        assertEquals(userRepository.findAll().size(), 0);
     }
 
     @Test
     void shouldDeleteRsWhenDeleteUser(){
-        userRepository.save(new UserEntity(admin));
         RsEvent newRsEvent = new RsEvent("第四条事件", "军事", 1);
         rsEventRepository.save(new RsEventEntity(newRsEvent));
         assertEquals(1,userRepository.findAll().size());
-        assertEquals(1,rsEventRepository.findAll().size());
+        assertEquals(4,rsEventRepository.findAll().size());
         userRepository.deleteByUserId(1);
         assertEquals(0,userRepository.findAll().size());
         assertEquals(0,rsEventRepository.findAll().size());
     }
+
 }

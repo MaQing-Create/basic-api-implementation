@@ -11,4 +11,7 @@ import java.util.List;
 @Repository
 public interface VoteRepository extends CrudRepository<VoteEntity, Integer> {
     List<VoteEntity> findAll();
+    List<VoteEntity> findByEventId(Integer eventId);
+
+    VoteEntity getVoteByEventId(Integer eventId);
 }

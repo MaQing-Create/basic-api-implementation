@@ -9,6 +9,7 @@ import com.thoughtworks.rslist.exception.CommonException;
 import com.thoughtworks.rslist.exception.InvalidIndexException;
 import com.thoughtworks.rslist.repository.RsEventRspository;
 import com.thoughtworks.rslist.repository.UserRepository;
+import com.thoughtworks.rslist.repository.VoteRepository;
 import com.thoughtworks.rslist.tools.LoggingController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,31 +38,19 @@ public class UserController {
     @Autowired
     RsEventRspository rsEventRepository;
 
+    @Autowired
+    VoteRepository voteRepository;
+
     public UserController() {
-        rsList.add(new RsEvent("第一条事件", "政治", 1));
-        rsList.add(new RsEvent("第二条事件", "科技", 1));
-        rsList.add(new RsEvent("第三条事件", "经济", 1));
-        userList = new ArrayList<>();
-        userList.add(admin);
     }
 
     @PostMapping("/user")
     ResponseEntity addUser(@RequestBody(required = true) @Valid User user) {
-//        UserEntity userEntity = UserEntity.builder()
-//                .userName(user.getUserName())
-//                .gender(user.getGender())
-//                .age(user.getAge())
-//                .email(user.getEmail())
-//                .phone(user.getPhone())
-//                .build();
         UserEntity userEntity = new UserEntity(user);
+        if (userRepository.existsByUserName(user.getUserName()))
+            return ResponseEntity.badRequest().build();
         userRepository.save(userEntity);
-        for (User userExist : userList) {
-            if (userExist.getUserName().equals(user.getUserName()))
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-        userList.add(user);
-        return ResponseEntity.created(null).body(userList.size() - 1);
+        return ResponseEntity.created(null).build();
     }
 
     @GetMapping("/user/{index}")
@@ -73,7 +62,15 @@ public class UserController {
     @GetMapping("/users")
     ResponseEntity<List> getUsers(@RequestParam(required = false) Integer start,
                                   @RequestParam(required = false) Integer end) throws InvalidIndexException, Exception {
-        return getList(start, end, userList);
+       // if (start == null && end == null)
+            return ResponseEntity.ok().body(userRepository.findAll());
+//        if (start != null) checkIsInputIndexOutOfRange(start, list, "invalid request param");
+//        if (end != null) checkIsInputIndexOutOfRange(end, list, "invalid request param");
+//        if (start == null) return ResponseEntity.ok().body(list.subList(0, end));
+//        if (end == null) return ResponseEntity.ok().body(list.subList(start - 1, list.size()));
+
+        //return ResponseEntity.ok().body(userRepository.getUsersBetweenUserId(start, end));
+        //return getList(start, end, userList);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

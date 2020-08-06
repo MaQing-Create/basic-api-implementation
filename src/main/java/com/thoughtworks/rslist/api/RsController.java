@@ -59,9 +59,13 @@ public class RsController {
 //    }
 
     @GetMapping("/rs/{index}")
-    ResponseEntity<RsEvent> getOneRs(@PathVariable int index) throws Exception, InvalidIndexException {
-        checkIsInputIndexOutOfRange(index, rsList, "invalid index");
-        return ResponseEntity.ok().body(rsList.get(index - 1));
+    ResponseEntity<RsEvent> getOneRs(@PathVariable Integer index) throws Exception, InvalidIndexException {
+//        checkIsInputIndexOutOfRange(index, rsList, "invalid index");
+        RsEvent rsEvent = new RsEvent(rsEventRepository.getRsEventsByEventId(index));
+        VoteEntity voteEntity = voteRepository.getVoteByEventId(index);
+        if (voteEntity != null)
+            rsEvent.setVoteNum(voteEntity.getVoteNum());
+        return ResponseEntity.ok().body(rsEvent);
     }
 
     @GetMapping("/rs/list")
@@ -81,21 +85,29 @@ public class RsController {
     }
 
     @PostMapping("/rs/list")
-    ResponseEntity editRs(@RequestParam(required = true) int index, @RequestBody String eventJson) throws Exception, InvalidIndexException {
+    ResponseEntity editRs(@RequestParam(required = true) Integer index, @RequestBody String eventJson) throws Exception,
+            InvalidIndexException {
         ObjectMapper objectMapper = new ObjectMapper();
         RsEvent newRsEvent = objectMapper.readValue(eventJson, RsEvent.class);
-        checkIsInputIndexOutOfRange(index, rsList,"invalid request param");
+        checkIsInputIndexOutOfRange(index, rsList, "invalid request param");
         if (newRsEvent.getEventName() != null)
             rsList.get(index - 1).setEventName(newRsEvent.getEventName());
         if (newRsEvent.getKeyWord() != null)
             rsList.get(index - 1).setKeyWord((newRsEvent.getKeyWord()));
+        RsEventEntity rsEventEntity = rsEventRepository.getRsEventsByEventId(index);
+        if (newRsEvent.getEventName() != null)
+            rsEventEntity.setEventName(newRsEvent.getEventName());
+        if (newRsEvent.getKeyWord() != null)
+            rsEventEntity.setKeyWord((newRsEvent.getKeyWord()));
+        rsEventRepository.save(rsEventEntity);
         return ResponseEntity.created(null).body(index);
     }
 
     @DeleteMapping("/rs/{index}")
-    ResponseEntity deleteRs(@PathVariable int index) throws Exception, InvalidIndexException {
-        checkIsInputIndexOutOfRange(index, rsList,"invalid index");
+    ResponseEntity deleteRs(@PathVariable Integer index) throws Exception, InvalidIndexException {
+        checkIsInputIndexOutOfRange(index, rsList, "invalid index");
         rsList.remove(index - 1);
+        rsEventRepository.deleteByEventId(index);
         return ResponseEntity.ok().build();
     }
 
@@ -112,7 +124,7 @@ public class RsController {
     ResponseEntity vote(@PathVariable(required = true) Integer rsEventId, @RequestBody Vote vote) throws JsonProcessingException {
         UserEntity userEntity = userRepository.getUsersByUserId(vote.getUserId());
         User user = new User(userEntity);
-        if (user.getVoteNum() < vote.getVoteNum()){
+        if (user.getVoteNum() < vote.getVoteNum()) {
             return ResponseEntity.badRequest().build();
         }
         vote.setEventId(rsEventId);

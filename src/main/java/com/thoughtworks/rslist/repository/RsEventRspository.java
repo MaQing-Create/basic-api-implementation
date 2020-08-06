@@ -11,4 +11,9 @@ import java.util.List;
 @Repository
 public interface RsEventRspository extends CrudRepository<RsEventEntity, Integer> {
     List<RsEventEntity> findAll();
+
+    RsEventEntity getRsEventsByEventId(Integer index);
+
+    @Transactional
+    void deleteByEventId(Integer eventId);
 }
