@@ -2,10 +2,21 @@ package com.thoughtworks.rslist.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.thoughtworks.rslist.entity.RsEventEntity;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.http.ResponseEntity;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class RsEvent {
 
     @NotNull
@@ -14,43 +25,18 @@ public class RsEvent {
     @NotNull
     private String keyWord;
 
+//    @NotNull
+//    @Valid
+//    private User user;
+
     @NotNull
-    @Valid
-    private User user;
+    private Integer userId;
 
-    RsEvent(){
+    public RsEvent(RsEventEntity rsEventEntity){
+        this.eventName = rsEventEntity.getEventName();
+        this.keyWord = rsEventEntity.getKeyWord();
 
-    }
 
-    public RsEvent(String eventName, String keyWord, User user){
-        this.eventName = eventName;
-        this.keyWord = keyWord;
-        this.user = user;
-    }
 
-    public String getEventName() {
-        return eventName;
-    }
-
-    public void setEventName(String eventName) {
-        this.eventName = eventName;
-    }
-
-    public String getKeyWord() {
-        return keyWord;
-    }
-
-    public void setKeyWord(String keyWord) {
-        this.keyWord = keyWord;
-    }
-
-    @JsonIgnore
-    public User getUser() {
-        return user;
-    }
-
-    @JsonProperty
-    public void setUser(User user) {
-        this.user = user;
     }
 }

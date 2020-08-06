@@ -7,6 +7,7 @@ import com.thoughtworks.rslist.domain.User;
 import com.thoughtworks.rslist.entity.UserEntity;
 import com.thoughtworks.rslist.exception.CommonException;
 import com.thoughtworks.rslist.exception.InvalidIndexException;
+import com.thoughtworks.rslist.repository.RsEventRspository;
 import com.thoughtworks.rslist.repository.UserRepository;
 import com.thoughtworks.rslist.tools.LoggingController;
 import org.slf4j.Logger;
@@ -33,16 +34,26 @@ public class UserController {
     @Autowired
     UserRepository userRepository;
 
+    @Autowired
+    RsEventRspository rsEventRepository;
+
     public UserController() {
-        rsList.add(new RsEvent("第一条事件", "政治", admin));
-        rsList.add(new RsEvent("第二条事件", "科技", admin));
-        rsList.add(new RsEvent("第三条事件", "经济", admin));
+        rsList.add(new RsEvent("第一条事件", "政治", 1));
+        rsList.add(new RsEvent("第二条事件", "科技", 1));
+        rsList.add(new RsEvent("第三条事件", "经济", 1));
         userList = new ArrayList<>();
         userList.add(admin);
     }
 
     @PostMapping("/user")
-     ResponseEntity addUser(@RequestBody(required = true) @Valid User user) {
+    ResponseEntity addUser(@RequestBody(required = true) @Valid User user) {
+//        UserEntity userEntity = UserEntity.builder()
+//                .userName(user.getUserName())
+//                .gender(user.getGender())
+//                .age(user.getAge())
+//                .email(user.getEmail())
+//                .phone(user.getPhone())
+//                .build();
         UserEntity userEntity = new UserEntity(user);
         userRepository.save(userEntity);
         for (User userExist : userList) {
@@ -54,8 +65,8 @@ public class UserController {
     }
 
     @GetMapping("/user/{index}")
-    ResponseEntity<UserEntity> getUser(@PathVariable int index){
-        UserEntity userEntity = userRepository.getUsersById(index);
+    ResponseEntity<UserEntity> getUser(@PathVariable Integer index) {
+        UserEntity userEntity = userRepository.getUsersByUserId(index);
         return ResponseEntity.ok(userEntity);
     }
 
@@ -75,8 +86,8 @@ public class UserController {
     }
 
     @DeleteMapping("/user/{index}")
-    ResponseEntity<UserEntity> deleteUser(@PathVariable int index){
-        userRepository.deleteById(index);
+    ResponseEntity<UserEntity> deleteUser(@PathVariable Integer index) {
+        userRepository.deleteByUserId(index);
         return ResponseEntity.ok().build();
     }
 }

@@ -132,6 +132,7 @@ public class UserControllerTest {
 
     @Test
     void shouldDeleteUser() throws Exception {
+        List list;
 
         User user = new User("userName", 18, "male", "user@email.com", "10123456789");
         ObjectMapper objectMapper = new ObjectMapper();
@@ -139,6 +140,7 @@ public class UserControllerTest {
 
         mockMvc.perform(post("/user").content(userJson).contentType(MediaType.APPLICATION_JSON)).andExpect(content().string("1")).andExpect(status().isCreated());
         assertEquals(userRepository.findAll().size(), 1);
+        list = userRepository.findAll();
         mockMvc.perform(delete("/user/1")).andExpect(status().isOk());
         assertEquals(userRepository.findAll().size(), 0);
     }

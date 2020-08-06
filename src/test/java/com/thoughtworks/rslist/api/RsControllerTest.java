@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.rslist.domain.RsEvent;
 import com.thoughtworks.rslist.domain.User;
 import com.thoughtworks.rslist.entity.UserEntity;
+import com.thoughtworks.rslist.repository.RsEventRspository;
 import com.thoughtworks.rslist.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,11 +36,16 @@ class RsControllerTest {
     @Autowired
     UserRepository userRepository;
 
+    @Autowired
+    RsEventRspository rsEventRepository;
+
     private User admin = new User("admin1", 18, "male", "admin@email.com", "10123456789");
 
     @BeforeEach
     void setUp() {
 //        mockMvc = MockMvcBuilders.standaloneSetup(new RsController()).build();
+        userRepository.deleteAll();
+        rsEventRepository.deleteAll();
     }
 
     @Test
@@ -78,15 +84,21 @@ class RsControllerTest {
 
     @Test
     void shouldAddOneRs() throws Exception {
-        String eventJson = "{\"eventName\":\"第四条事件\",\"keyWord\":\"军事\",\"user\":{\"userName\":\"admin1\",\"age\":18," +
-                " \"gender\":\"male\",\"email\":\"admin@email.com\", \"phone\":\"10123456789\"}}";
+        RsEvent newRsEvent = new RsEvent("第四条事件", "军事", 1);
+        ObjectMapper objectMapper = new ObjectMapper();
 
-        mockMvc.perform(post("/rs/add").content(eventJson).contentType(MediaType.APPLICATION_JSON)).andExpect(content().string("3")).andExpect(status().isCreated());
+        String eventJson = objectMapper.writeValueAsString(newRsEvent);
+
+        userRepository.save(new UserEntity(admin));
+
+        mockMvc.perform(post("/rs").content(eventJson).contentType(MediaType.APPLICATION_JSON)).andExpect(content().string("3")).andExpect(status().isCreated());
         mockMvc.perform(get("/rs/list")).andExpect(jsonPath("$[0].eventName", is("第一条事件"))).andExpect(jsonPath("$[0].keyWord"
                 , is("政治"))).andExpect(jsonPath("$[1].eventName", is("第二条事件"))).andExpect(jsonPath("$[1].keyWord"
                 , is("科技"))).andExpect(jsonPath("$[2].eventName", is("第三条事件"))).andExpect(jsonPath("$[2].keyWord"
                 , is("经济"))).andExpect(jsonPath("$[3].eventName", is("第四条事件"))).andExpect(jsonPath("$[3].keyWord"
                 , is("军事"))).andExpect(status().isOk());
+
+        assertEquals(rsEventRepository.findAll().size(), 1);
     }
 
     @Test
@@ -122,7 +134,7 @@ class RsControllerTest {
 
     @Test
     void shouldAddRsFailWhenEventNameIsNull() throws Exception {
-        RsEvent newRsEvent = new RsEvent(null, "军事", admin);
+        RsEvent newRsEvent = new RsEvent(null, "军事", 1);
 
         ObjectMapper objectMapper = new ObjectMapper();
         String eventJson = objectMapper.writeValueAsString(newRsEvent);
@@ -132,7 +144,7 @@ class RsControllerTest {
 
     @Test
     void shouldAddRsFailWhenKeywordIsNull() throws Exception {
-        RsEvent newRsEvent = new RsEvent("第四条事件", null, admin);
+        RsEvent newRsEvent = new RsEvent("第四条事件", null, 1);
 
         ObjectMapper objectMapper = new ObjectMapper();
         String eventJson = objectMapper.writeValueAsString(newRsEvent);
@@ -154,7 +166,7 @@ class RsControllerTest {
     @Test
     void shouldAddRsFailWhenUserNameLengthLargerThan8() throws Exception {
         User user = new User("userName0", 18, "male", "user@email.com", "10123456789");
-        RsEvent newRsEvent = new RsEvent("第四条事件", "军事", user);
+        RsEvent newRsEvent = new RsEvent("第四条事件", "军事", 1);
 
         ObjectMapper objectMapper = new ObjectMapper();
         String eventJson = objectMapper.writeValueAsString(newRsEvent);
@@ -165,7 +177,7 @@ class RsControllerTest {
     @Test
     void shouldAddRsFailWhenAgeLargerThan100() throws Exception {
         User user = new User("userName", 101, "male", "user@email.com", "10123456789");
-        RsEvent newRsEvent = new RsEvent("第四条事件", "军事", user);
+        RsEvent newRsEvent = new RsEvent("第四条事件", "军事", 1);
 
         ObjectMapper objectMapper = new ObjectMapper();
         String eventJson = objectMapper.writeValueAsString(newRsEvent);
@@ -176,7 +188,7 @@ class RsControllerTest {
     @Test
     void shouldAddRsFailWhenAgeLessThan18() throws Exception {
         User user = new User("userName", 17, "male", "user@email.com", "10123456789");
-        RsEvent newRsEvent = new RsEvent("第四条事件", "军事", user);
+        RsEvent newRsEvent = new RsEvent("第四条事件", "军事", 1);
 
         ObjectMapper objectMapper = new ObjectMapper();
         String eventJson = objectMapper.writeValueAsString(newRsEvent);
@@ -187,7 +199,7 @@ class RsControllerTest {
     @Test
     void shouldAddRsFailWhenEmailIsIllegal() throws Exception {
         User user = new User("userName", 18, "male", "useremail.com", "10123456789");
-        RsEvent newRsEvent = new RsEvent("第四条事件", "军事", user);
+        RsEvent newRsEvent = new RsEvent("第四条事件", "军事", 1);
 
         ObjectMapper objectMapper = new ObjectMapper();
         String eventJson = objectMapper.writeValueAsString(newRsEvent);
@@ -198,7 +210,7 @@ class RsControllerTest {
     @Test
     void shouldAddRsFailWhenPhoneIsIllegal() throws Exception {
         User user = new User("userName", 18, "male", "user@email.com", "00123456789");
-        RsEvent newRsEvent = new RsEvent("第四条事件", "军事", user);
+        RsEvent newRsEvent = new RsEvent("第四条事件", "军事", 1);
 
         ObjectMapper objectMapper = new ObjectMapper();
         String eventJson = objectMapper.writeValueAsString(newRsEvent);
@@ -226,4 +238,17 @@ class RsControllerTest {
         mockMvc.perform(post("/rs/add").content(eventJson).contentType(MediaType.APPLICATION_JSON)).andExpect(jsonPath("$.error",is("invalid param"))).andExpect(status().isBadRequest());
     }
 
+    @Test
+    void shouldNotAddRsWhenUserNotExists()throws Exception {
+        RsEvent newRsEvent = new RsEvent("第四条事件", "军事", 0);
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        String eventJson = objectMapper.writeValueAsString(newRsEvent);
+
+        userRepository.save(new UserEntity(admin));
+
+        mockMvc.perform(post("/rs").content(eventJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isBadRequest());
+
+        assertEquals(rsEventRepository.findAll().size(), 0);
+    }
 }

@@ -4,11 +4,15 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.rslist.domain.RsEvent;
 import com.thoughtworks.rslist.domain.User;
+import com.thoughtworks.rslist.entity.RsEventEntity;
 import com.thoughtworks.rslist.exception.CommonException;
 import com.thoughtworks.rslist.exception.InvalidIndexException;
+import com.thoughtworks.rslist.repository.RsEventRspository;
+import com.thoughtworks.rslist.repository.UserRepository;
 import com.thoughtworks.rslist.tools.LoggingController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -27,10 +31,16 @@ public class RsController {
     private List<User> userList = new ArrayList<>();
     private User admin = new User("admin", 18, "male", "admin@email.com", "10123456789");
 
+    @Autowired
+    UserRepository userRepository;
+
+    @Autowired
+    RsEventRspository rsEventRepository;
+
     public RsController() {
-        rsList.add(new RsEvent("第一条事件", "政治", admin));
-        rsList.add(new RsEvent("第二条事件", "科技", admin));
-        rsList.add(new RsEvent("第三条事件", "经济", admin));
+        rsList.add(new RsEvent("第一条事件", "政治", 1));
+        rsList.add(new RsEvent("第二条事件", "科技", 1));
+        rsList.add(new RsEvent("第三条事件", "经济", 1));
         userList.add(admin);
     }
 
@@ -52,8 +62,12 @@ public class RsController {
         return getList(start, end, rsList);
     }
 
-    @PostMapping("/rs/add")
+    @PostMapping("/rs")
     ResponseEntity addRs(@RequestBody @Valid RsEvent rsEvent) throws JsonProcessingException {
+        if (!userRepository.existsByUserId(rsEvent.getUserId())) {
+            return ResponseEntity.badRequest().build();
+        }
+        rsEventRepository.save(new RsEventEntity(rsEvent));
         rsList.add(rsEvent);
         return ResponseEntity.created(null).body(rsList.size() - 1);
     }
