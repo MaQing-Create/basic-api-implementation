@@ -2,11 +2,14 @@ package com.thoughtworks.rslist.api;
 
 import com.thoughtworks.rslist.domain.RsEvent;
 import com.thoughtworks.rslist.domain.User;
+import com.thoughtworks.rslist.entity.UserEntity;
 import com.thoughtworks.rslist.exception.CommonException;
 import com.thoughtworks.rslist.exception.InvalidIndexException;
+import com.thoughtworks.rslist.repository.UserRepository;
 import com.thoughtworks.rslist.tools.LoggingController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -22,8 +25,11 @@ import static com.thoughtworks.rslist.tools.CommonMethods.getList;
 public class UserController {
 
     private List<RsEvent> rsList = new ArrayList<>();
-    private static List<User> userList = new ArrayList<>();
+    private List<User> userList = new ArrayList<>();
     private User admin = new User("admin", 18, "male", "admin@email.com", "10123456789");
+
+    @Autowired
+    UserRepository userRepository;
 
     public UserController() {
         rsList.add(new RsEvent("第一条事件", "政治", admin));
@@ -34,7 +40,9 @@ public class UserController {
     }
 
     @PostMapping("/user")
-    static ResponseEntity addUser(@RequestBody(required = true) @Valid User user) {
+     ResponseEntity addUser(@RequestBody(required = true) @Valid User user) {
+        UserEntity userEntity = new UserEntity(user);
+        userRepository.save(userEntity);
         for (User userExist : userList) {
             if (userExist.getUserName().equals(user.getUserName()))
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();

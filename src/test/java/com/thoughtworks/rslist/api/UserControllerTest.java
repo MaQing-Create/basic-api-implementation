@@ -2,8 +2,11 @@ package com.thoughtworks.rslist.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.rslist.domain.User;
+import com.thoughtworks.rslist.entity.UserEntity;
+import com.thoughtworks.rslist.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -14,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -21,14 +25,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 public class UserControllerTest {
-    //@Autowired
+    @Autowired
     MockMvc mockMvc;
+
+    @Autowired
+    UserRepository userRepository;
 
     private User admin = new User("admin1", 18, "male", "admin@email.com", "10123456789");
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(new UserController()).build();
+        userRepository.deleteAll();
+//        mockMvc = MockMvcBuilders.standaloneSetup(new UserController()).build();
     }
 
     @Test
@@ -96,5 +104,19 @@ public class UserControllerTest {
         ObjectMapper objectMapper = new ObjectMapper();
         String userJson = objectMapper.writeValueAsString(user);
         mockMvc.perform(post("/user").content(userJson).contentType(MediaType.APPLICATION_JSON)).andExpect(jsonPath("$.error",is("invalid user"))).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldAddUserIntoDatabase() throws Exception {
+        User user = new User("userName", 18, "male", "user@email.com", "10123456789");
+        ObjectMapper objectMapper = new ObjectMapper();
+        String userJson = objectMapper.writeValueAsString(user);
+        mockMvc.perform(post("/user").content(userJson).contentType(MediaType.APPLICATION_JSON)).andExpect(content().string("1")).andExpect(status().isCreated());
+        List<UserEntity> userListFromDatabase = userRepository.findAll();
+        assertEquals(userListFromDatabase.get(0).getUserName(), "userName");
+        assertEquals(userListFromDatabase.get(0).getAge(), 18);
+        assertEquals(userListFromDatabase.get(0).getGender(), "male");
+        assertEquals(userListFromDatabase.get(0).getEmail(), "user@email.com");
+        assertEquals(userListFromDatabase.get(0).getPhone(), "10123456789");
     }
 }

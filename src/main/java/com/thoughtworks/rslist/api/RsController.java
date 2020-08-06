@@ -16,10 +16,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.ArrayList;
-import java.util.InvalidPropertiesFormatException;
 import java.util.List;
 
-import static com.thoughtworks.rslist.api.UserController.addUser;
 import static com.thoughtworks.rslist.tools.CommonMethods.checkIsInputIndexOutOfRange;
 import static com.thoughtworks.rslist.tools.CommonMethods.getList;
 
@@ -57,7 +55,6 @@ public class RsController {
     @PostMapping("/rs/add")
     ResponseEntity addRs(@RequestBody @Valid RsEvent rsEvent) throws JsonProcessingException {
         rsList.add(rsEvent);
-        addUser(rsEvent.getUser());
         return ResponseEntity.created(null).body(rsList.size() - 1);
     }
 
@@ -73,11 +70,11 @@ public class RsController {
         return ResponseEntity.created(null).body(index);
     }
 
-    @PostMapping("/rs/delete")
-    ResponseEntity deleteRs(@RequestParam(required = true) int index) throws Exception, InvalidIndexException {
+    @DeleteMapping("/rs/{index}")
+    ResponseEntity deleteRs(@PathVariable int index) throws Exception, InvalidIndexException {
         checkIsInputIndexOutOfRange(index, rsList,"invalid index");
         rsList.remove(index - 1);
-        return ResponseEntity.created(null).body(index);
+        return ResponseEntity.ok().build();
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
