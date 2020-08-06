@@ -1,5 +1,6 @@
 package com.thoughtworks.rslist.api;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.rslist.domain.User;
 import com.thoughtworks.rslist.entity.UserEntity;
@@ -18,8 +19,7 @@ import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -118,5 +118,28 @@ public class UserControllerTest {
         assertEquals(userListFromDatabase.get(0).getGender(), "male");
         assertEquals(userListFromDatabase.get(0).getEmail(), "user@email.com");
         assertEquals(userListFromDatabase.get(0).getPhone(), "10123456789");
+    }
+
+    @Test
+    void shouldGetUser() throws Exception {
+        User user = new User("userName", 18, "male", "user@email.com", "10123456789");
+        ObjectMapper objectMapper = new ObjectMapper();
+        String userJson = objectMapper.writeValueAsString(user);
+
+        mockMvc.perform(post("/user").content(userJson).contentType(MediaType.APPLICATION_JSON)).andExpect(content().string("1")).andExpect(status().isCreated());
+        mockMvc.perform(get("/user/1")).andExpect(jsonPath("$.userName",is("userName"))).andExpect(status().isOk());
+    }
+
+    @Test
+    void shouldDeleteUser() throws Exception {
+
+        User user = new User("userName", 18, "male", "user@email.com", "10123456789");
+        ObjectMapper objectMapper = new ObjectMapper();
+        String userJson = objectMapper.writeValueAsString(user);
+
+        mockMvc.perform(post("/user").content(userJson).contentType(MediaType.APPLICATION_JSON)).andExpect(content().string("1")).andExpect(status().isCreated());
+        assertEquals(userRepository.findAll().size(), 1);
+        mockMvc.perform(delete("/user/1")).andExpect(status().isOk());
+        assertEquals(userRepository.findAll().size(), 0);
     }
 }

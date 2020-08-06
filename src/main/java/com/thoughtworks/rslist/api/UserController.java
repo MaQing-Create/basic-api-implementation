@@ -1,5 +1,7 @@
 package com.thoughtworks.rslist.api;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.rslist.domain.RsEvent;
 import com.thoughtworks.rslist.domain.User;
 import com.thoughtworks.rslist.entity.UserEntity;
@@ -51,6 +53,12 @@ public class UserController {
         return ResponseEntity.created(null).body(userList.size() - 1);
     }
 
+    @GetMapping("/user/{index}")
+    ResponseEntity<UserEntity> getUser(@PathVariable int index){
+        UserEntity userEntity = userRepository.getUsersById(index);
+        return ResponseEntity.ok(userEntity);
+    }
+
     @GetMapping("/users")
     ResponseEntity<List> getUsers(@RequestParam(required = false) Integer start,
                                   @RequestParam(required = false) Integer end) throws InvalidIndexException, Exception {
@@ -64,5 +72,11 @@ public class UserController {
         CommonException commonException = new CommonException();
         commonException.setError("invalid user");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(commonException);
+    }
+
+    @DeleteMapping("/user/{index}")
+    ResponseEntity<UserEntity> deleteUser(@PathVariable int index){
+        userRepository.deleteById(index);
+        return ResponseEntity.ok().build();
     }
 }
