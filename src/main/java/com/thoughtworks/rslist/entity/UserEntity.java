@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Entity
 @Table(name = "user")
@@ -24,6 +25,8 @@ public class UserEntity {
     private int age;
     private String email;
     private String phone;
+    @OneToMany(cascade = CascadeType.REMOVE, mappedBy ="userId")
+    private List<RsEventEntity> events;
 
     public UserEntity(User user){
         this.userName = user.getUserName();

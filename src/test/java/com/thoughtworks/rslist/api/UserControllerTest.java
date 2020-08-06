@@ -2,8 +2,11 @@ package com.thoughtworks.rslist.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.thoughtworks.rslist.domain.RsEvent;
 import com.thoughtworks.rslist.domain.User;
+import com.thoughtworks.rslist.entity.RsEventEntity;
 import com.thoughtworks.rslist.entity.UserEntity;
+import com.thoughtworks.rslist.repository.RsEventRspository;
 import com.thoughtworks.rslist.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,11 +34,15 @@ public class UserControllerTest {
     @Autowired
     UserRepository userRepository;
 
+    @Autowired
+    RsEventRspository rsEventRepository;
+
     private User admin = new User("admin1", 18, "male", "admin@email.com", "10123456789");
 
     @BeforeEach
     void setUp() {
         userRepository.deleteAll();
+        rsEventRepository.deleteAll();
 //        mockMvc = MockMvcBuilders.standaloneSetup(new UserController()).build();
     }
 
@@ -132,16 +139,25 @@ public class UserControllerTest {
 
     @Test
     void shouldDeleteUser() throws Exception {
-        List list;
-
         User user = new User("userName", 18, "male", "user@email.com", "10123456789");
         ObjectMapper objectMapper = new ObjectMapper();
         String userJson = objectMapper.writeValueAsString(user);
 
         mockMvc.perform(post("/user").content(userJson).contentType(MediaType.APPLICATION_JSON)).andExpect(content().string("1")).andExpect(status().isCreated());
         assertEquals(userRepository.findAll().size(), 1);
-        list = userRepository.findAll();
         mockMvc.perform(delete("/user/1")).andExpect(status().isOk());
         assertEquals(userRepository.findAll().size(), 0);
+    }
+
+    @Test
+    void shouldDeleteRsWhenDeleteUser(){
+        userRepository.save(new UserEntity(admin));
+        RsEvent newRsEvent = new RsEvent("第四条事件", "军事", 1);
+        rsEventRepository.save(new RsEventEntity(newRsEvent));
+        assertEquals(1,userRepository.findAll().size());
+        assertEquals(1,rsEventRepository.findAll().size());
+        userRepository.deleteByUserId(1);
+        assertEquals(0,userRepository.findAll().size());
+        assertEquals(0,rsEventRepository.findAll().size());
     }
 }
