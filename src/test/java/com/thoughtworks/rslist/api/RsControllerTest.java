@@ -3,9 +3,12 @@ package com.thoughtworks.rslist.api;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.rslist.domain.RsEvent;
 import com.thoughtworks.rslist.domain.User;
+import com.thoughtworks.rslist.entity.RsEventEntity;
 import com.thoughtworks.rslist.entity.UserEntity;
+import com.thoughtworks.rslist.entity.VoteEntity;
 import com.thoughtworks.rslist.repository.RsEventRspository;
 import com.thoughtworks.rslist.repository.UserRepository;
+import com.thoughtworks.rslist.repository.VoteRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +18,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,11 +43,15 @@ class RsControllerTest {
     @Autowired
     RsEventRspository rsEventRepository;
 
+    @Autowired
+    VoteRepository voteRepository;
+
     private User admin = new User("admin1", 18, "male", "admin@email.com", "10123456789");
 
     @BeforeEach
     void setUp() {
 //        mockMvc = MockMvcBuilders.standaloneSetup(new RsController()).build();
+        voteRepository.deleteAll();
         userRepository.deleteAll();
         rsEventRepository.deleteAll();
     }
@@ -250,5 +258,27 @@ class RsControllerTest {
         mockMvc.perform(post("/rs").content(eventJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isBadRequest());
 
         assertEquals(rsEventRepository.findAll().size(), 0);
+    }
+
+    @Test
+    void canVoteRs() throws Exception {
+        userRepository.save(new UserEntity(admin));
+        RsEvent newRsEvent = new RsEvent("第四条事件", "军事", 1);
+        rsEventRepository.save(new RsEventEntity(newRsEvent));
+        String eventJson = "{\"voteNum\":5, \"userId\":1, \"voteTime\":\""+LocalTime.now().toString()+"\"}";
+        mockMvc.perform(post("/rs/vote/1").content(eventJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
+        List<VoteEntity> votes = voteRepository.findAll();
+        assertEquals(1,votes.size());
+        assertEquals(1,votes.get(0).getUserId());
+        assertEquals(1,votes.get(0).getEventId());
+    }
+
+    @Test
+    void cannotVoteRsWhenVoteIsNotEnough() throws Exception {
+        userRepository.save(new UserEntity(admin));
+        RsEvent newRsEvent = new RsEvent("第四条事件", "军事", 1);
+        rsEventRepository.save(new RsEventEntity(newRsEvent));
+        String eventJson = "{\"voteNum\":15, \"userId\":1, \"voteTime\":\""+LocalTime.now().toString()+"\"}";
+        mockMvc.perform(post("/rs/vote/1").content(eventJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isBadRequest());
     }
 }
