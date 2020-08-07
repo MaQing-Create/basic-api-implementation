@@ -16,10 +16,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.time.LocalTime;
-import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -267,7 +265,7 @@ class RsControllerTest {
         userRepository.save(new UserEntity(admin));
         RsEvent newRsEvent = new RsEvent("第四条事件", "军事", 1);
         rsEventRepository.save(new RsEventEntity(newRsEvent));
-        String eventJson = "{\"voteNum\":5, \"userId\":1, \"voteTime\":\"" + LocalTime.now().toString() + "\"}";
+        String eventJson = "{\"voteNum\":5, \"userId\":1, \"voteTime\":\"" + LocalDateTime.now() + "\"}";
         mockMvc.perform(post("/rs/vote/1").content(eventJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
         List<VoteEntity> votes = voteRepository.findAll();
         assertEquals(1, votes.size());
@@ -280,17 +278,8 @@ class RsControllerTest {
         userRepository.save(new UserEntity(admin));
         RsEvent newRsEvent = new RsEvent("第四条事件", "军事", 1);
         rsEventRepository.save(new RsEventEntity(newRsEvent));
-        String eventJson = "{\"voteNum\":15, \"userId\":1, \"voteTime\":\"" + LocalTime.now().toString() + "\"}";
+        String eventJson = "{\"voteNum\":15, \"userId\":1, \"voteTime\":\"" + LocalDateTime.now() + "\"}";
         mockMvc.perform(post("/rs/vote/1").content(eventJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isBadRequest());
     }
 
-    @Test
-    void test() throws Exception {
-        List<UserEntity> userList = userRepository.findAll();
-        List<RsEventEntity> eventList = rsEventRepository.findAll();
-        userRepository.deleteByUserId(1);
-        userRepository.save(new UserEntity(admin));
-        userList = userRepository.findAll();
-        int i = 1;
-    }
 }
