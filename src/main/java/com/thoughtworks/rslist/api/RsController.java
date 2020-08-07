@@ -23,8 +23,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.thoughtworks.rslist.tools.CommonMethods.checkIsInputIndexOutOfRange;
 import static com.thoughtworks.rslist.tools.CommonMethods.getList;
@@ -32,9 +32,11 @@ import static org.springframework.http.ResponseEntity.badRequest;
 
 @RestController
 public class RsController {
-    private List<RsEvent> rsList = new ArrayList<>();
-    private List<User> userList = new ArrayList<>();
-    private User admin = new User("admin", 18, "male", "admin@email.com", "10123456789");
+    private List<RsEvent> rsList;
+    private List<User> userList;
+    private List<Vote> voteList;
+
+    private List<RsEventEntity> rsEventEntityList;
 
     @Autowired
     UserRepository userRepository;
@@ -45,23 +47,15 @@ public class RsController {
     @Autowired
     VoteRepository voteRepository;
 
-    public RsController() {
-        rsList.add(new RsEvent("第一条事件", "政治", 1));
-        rsList.add(new RsEvent("第二条事件", "科技", 1));
-        rsList.add(new RsEvent("第三条事件", "经济", 1));
-        userList.add(admin);
-    }
 
-//    private void checkIsInputIndexOutOfRange(int index) throws Exception, InvalidIndexException {
-//        if (index < 1 || index > rsList.size()) {
-//            throw new InvalidIndexException("Error Request Param!");
-//        }
-//    }
+    public RsController() {
+    }
 
     @GetMapping("/rs/{index}")
     ResponseEntity<RsEvent> getOneRs(@PathVariable Integer index) throws Exception, InvalidIndexException {
-//        checkIsInputIndexOutOfRange(index, rsList, "invalid index");
-        RsEvent rsEvent = new RsEvent(rsEventRepository.getRsEventsByEventId(index));
+        rsList = rsEventRepository.findAll().stream().map(rsEventEntity -> new RsEvent(rsEventEntity)).collect(Collectors.toList());
+        checkIsInputIndexOutOfRange(index, rsList, "invalid index");
+        RsEvent rsEvent = rsList.get(index - 1);
         VoteEntity voteEntity = voteRepository.getVoteByEventId(index);
         if (voteEntity != null)
             rsEvent.setVoteNum(voteEntity.getVoteNum());
@@ -71,6 +65,8 @@ public class RsController {
     @GetMapping("/rs/list")
     ResponseEntity<List> getRsBetween(@RequestParam(required = false) Integer start,
                                       @RequestParam(required = false) Integer end) throws InvalidIndexException, Exception {
+        rsList = rsEventRepository.findAll().stream().map(rsEventEntity -> new RsEvent(rsEventEntity)).collect(Collectors.toList());
+
         return getList(start, end, rsList);
     }
 
@@ -80,8 +76,7 @@ public class RsController {
             return badRequest().build();
         }
         rsEventRepository.save(new RsEventEntity(rsEvent));
-        rsList.add(rsEvent);
-        return ResponseEntity.created(null).body(rsList.size() - 1);
+        return ResponseEntity.created(null).body(rsEventRepository.count());
     }
 
     @PostMapping("/rs/list")
@@ -89,25 +84,21 @@ public class RsController {
             InvalidIndexException {
         ObjectMapper objectMapper = new ObjectMapper();
         RsEvent newRsEvent = objectMapper.readValue(eventJson, RsEvent.class);
-        checkIsInputIndexOutOfRange(index, rsList, "invalid request param");
+        rsEventEntityList = rsEventRepository.findAll();
+        checkIsInputIndexOutOfRange(index, rsEventEntityList, "invalid request param");
         if (newRsEvent.getEventName() != null)
-            rsList.get(index - 1).setEventName(newRsEvent.getEventName());
+            rsEventEntityList.get(index - 1).setEventName(newRsEvent.getEventName());
         if (newRsEvent.getKeyWord() != null)
-            rsList.get(index - 1).setKeyWord((newRsEvent.getKeyWord()));
-        RsEventEntity rsEventEntity = rsEventRepository.getRsEventsByEventId(index);
-        if (newRsEvent.getEventName() != null)
-            rsEventEntity.setEventName(newRsEvent.getEventName());
-        if (newRsEvent.getKeyWord() != null)
-            rsEventEntity.setKeyWord((newRsEvent.getKeyWord()));
-        rsEventRepository.save(rsEventEntity);
+            rsEventEntityList.get(index - 1).setKeyWord((newRsEvent.getKeyWord()));
+        rsEventRepository.save(rsEventEntityList.get(index - 1));
         return ResponseEntity.created(null).body(index);
     }
 
     @DeleteMapping("/rs/{index}")
     ResponseEntity deleteRs(@PathVariable Integer index) throws Exception, InvalidIndexException {
-        checkIsInputIndexOutOfRange(index, rsList, "invalid index");
-        rsList.remove(index - 1);
-        rsEventRepository.deleteByEventId(index);
+        List<RsEventEntity> rsEventEntityList = rsEventRepository.findAll();
+        checkIsInputIndexOutOfRange(index, rsEventEntityList, "invalid index");
+        rsEventRepository.deleteByEventId(rsEventEntityList.get(index).getEventId());
         return ResponseEntity.ok().build();
     }
 
@@ -123,20 +114,14 @@ public class RsController {
     @PostMapping("/rs/vote/{rsEventId}")
     ResponseEntity vote(@PathVariable(required = true) Integer rsEventId, @RequestBody Vote vote) throws JsonProcessingException {
         UserEntity userEntity = userRepository.getUsersByUserId(vote.getUserId());
-        User user = new User(userEntity);
-        if (user.getVoteNum() < vote.getVoteNum()) {
+        if (userEntity.getVoteNum() < vote.getVoteNum()) {
             return ResponseEntity.badRequest().build();
         }
         vote.setEventId(rsEventId);
         VoteEntity voteEntity = new VoteEntity(vote);
         voteRepository.save(voteEntity);
+        userEntity.setVoteNum(userEntity.getVoteNum() - vote.getVoteNum());
+        userRepository.save(userEntity);
         return ResponseEntity.ok().build();
     }
-
-//    @ExceptionHandler(InvalidIndexException.class)
-//    ResponseEntity exceptionHandler(InvalidIndexException ex){
-//        CommonException commonException = new CommonException();
-//        commonException.setError(ex.getMessage());
-//        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(commonException);
-//    }
 }

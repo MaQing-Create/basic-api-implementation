@@ -22,14 +22,15 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.thoughtworks.rslist.tools.CommonMethods.getList;
 
 @RestController
 public class UserController {
 
-    private List<RsEvent> rsList = new ArrayList<>();
-    private List<User> userList = new ArrayList<>();
+    private List<RsEvent> rsList;
+    private List<User> userList;
     private User admin = new User("admin", 18, "male", "admin@email.com", "10123456789");
 
     @Autowired
@@ -62,15 +63,9 @@ public class UserController {
     @GetMapping("/users")
     ResponseEntity<List> getUsers(@RequestParam(required = false) Integer start,
                                   @RequestParam(required = false) Integer end) throws InvalidIndexException, Exception {
-       // if (start == null && end == null)
-            return ResponseEntity.ok().body(userRepository.findAll());
-//        if (start != null) checkIsInputIndexOutOfRange(start, list, "invalid request param");
-//        if (end != null) checkIsInputIndexOutOfRange(end, list, "invalid request param");
-//        if (start == null) return ResponseEntity.ok().body(list.subList(0, end));
-//        if (end == null) return ResponseEntity.ok().body(list.subList(start - 1, list.size()));
-
-        //return ResponseEntity.ok().body(userRepository.getUsersBetweenUserId(start, end));
-        //return getList(start, end, userList);
+        userList =
+                userRepository.findAll().stream().map(userEntity -> new User(userEntity)).collect(Collectors.toList());
+        return getList(start, end, userList);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

@@ -87,7 +87,7 @@ public class UserControllerTest {
         ObjectMapper objectMapper = new ObjectMapper();
         String userJson = objectMapper.writeValueAsString(user);
         mockMvc.perform(post("/user").content(userJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isCreated());
-        assertEquals("userName", userRepository.getUsersByUserId(5).getUserName());
+        assertEquals("userName", userRepository.getUsersByUserId(2).getUserName());
     }
 
     @Test
@@ -115,16 +115,16 @@ public class UserControllerTest {
     }
 
 
-//    @Test
-//    void shouldGetAllUser() throws Exception {
-//        List<User> userList = new ArrayList<>();
-//        User admin = new User("admin", 18, "male", "admin@email.com", "10123456789");
-//        userList.add(admin);
-//        ObjectMapper objectMapper = new ObjectMapper();
-//        String userListString = objectMapper.writeValueAsString(userList);
-//        mockMvc.perform(get("/users")).andExpect(content().string(userListString)).andExpect(status().isOk());
-//
-//    }
+    @Test
+    void shouldGetAllUser() throws Exception {
+        List<User> userList = new ArrayList<>();
+        User admin = new User("admin", 18, "male", "admin@email.com", "10123456789");
+        userList.add(admin);
+        ObjectMapper objectMapper = new ObjectMapper();
+        String userListString = objectMapper.writeValueAsString(userList);
+        mockMvc.perform(get("/users")).andExpect(content().string(userListString)).andExpect(status().isOk());
+
+    }
 
     @Test
     void shouldThrowMethodArgumentNotValidExceptionWhenNotPassValidation() throws Exception {
@@ -155,7 +155,7 @@ public class UserControllerTest {
         String userJson = objectMapper.writeValueAsString(user);
 
         mockMvc.perform(post("/user").content(userJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isCreated());
-        mockMvc.perform(get("/user/5")).andExpect(jsonPath("$.userName",is("userName"))).andExpect(status().isOk());
+        mockMvc.perform(get("/user/2")).andExpect(jsonPath("$.userName",is("userName"))).andExpect(status().isOk());
     }
 
     @Test
@@ -165,9 +165,9 @@ public class UserControllerTest {
         String userJson = objectMapper.writeValueAsString(user);
 
         mockMvc.perform(post("/user").content(userJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isCreated());
-        assertEquals(userRepository.findAll().size(), 2);
-        mockMvc.perform(delete("/user/5")).andExpect(status().isOk());
-        assertEquals(userRepository.findAll().size(), 1);
+        assertEquals(userRepository.count(), 2);
+        mockMvc.perform(delete("/user/2")).andExpect(status().isOk());
+        assertEquals(userRepository.count(), 1);
     }
 
     @Test

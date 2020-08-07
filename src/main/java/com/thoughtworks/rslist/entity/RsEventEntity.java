@@ -17,7 +17,7 @@ import javax.persistence.*;
 public class RsEventEntity {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer eventId;
     private String eventName;
     private String keyWord;
