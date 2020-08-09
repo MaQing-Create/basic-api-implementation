@@ -272,7 +272,7 @@ class RsControllerTest {
         rsEventRepository.save(new RsEventEntity(newRsEvent));
         Long voteTime = Long.parseLong(df.format(LocalDateTime.now()));
         String eventJson = "{\"voteNum\":5, \"userId\":" + userId + ", \"voteTime\":\"" + voteTime + "\"}";
-        mockMvc.perform(post("/rs/vote/1").content(eventJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
+        mockMvc.perform(post("/rs/1/vote").content(eventJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
         List<VoteEntity> votes = voteRepository.findAll();
         assertEquals(1, votes.size());
         assertEquals(userId, votes.get(0).getUserId());
@@ -287,7 +287,7 @@ class RsControllerTest {
         rsEventRepository.save(new RsEventEntity(newRsEvent));
         Long voteTime = Long.parseLong(df.format(LocalDateTime.now()));
         String eventJson = "{\"voteNum\":15, \"userId\":" + userId + ", \"voteTime\":" + voteTime + "}";
-        mockMvc.perform(post("/rs/vote/1").content(eventJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isBadRequest());
+        mockMvc.perform(post("/rs/1/vote").content(eventJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isBadRequest());
     }
 
 }

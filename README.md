@@ -1,10 +1,11 @@
 ### 作业描述
 
+#### 切换到课程对应的分支查看每节课的作业要求
+* Routing: routing
+* Data Binding: data-binding
+* Validation: validation
+* Customised Response: customize-response
+* Error Handling: error-handling
 
-* 去掉RsService上的@Service注解
-通过使用@Bean这种方式进行spring bean的定义和注入
-reference: https://docs.spring.io/spring-javaconfig/docs/1.0.0.M4/reference/html/ch02s02.html
-
-* 阅读：https://docs.spring.io/spring-boot/docs/2.0.x/reference/html/using-boot-spring-beans-and-dependency-injection.html
-修改所有的service和controller 将依赖注入的方式改为通过构造函数注入（而非直接在字段上添加@Autowired）
+<span style="color: red"> 注意：最终需要将改动合并到master分支 </span> 
 

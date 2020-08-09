@@ -109,7 +109,7 @@ public class RsController {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(commonException);
     }
 
-    @PostMapping("/rs/vote/{rsEventId}")
+    @PostMapping("/rs/{rsEventId}/vote")
     ResponseEntity vote(@PathVariable(required = true) Integer rsEventId, @RequestBody Vote vote) throws JsonProcessingException {
         UserEntity userEntity = userRepository.getUsersByUserId(vote.getUserId());
         if (userEntity.getVoteNum() < vote.getVoteNum()) {
