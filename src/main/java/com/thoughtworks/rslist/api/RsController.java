@@ -38,17 +38,15 @@ public class RsController {
 
     private List<RsEventEntity> rsEventEntityList;
 
-    @Autowired
-    UserRepository userRepository;
-
-    @Autowired
-    RsEventRspository rsEventRepository;
-
-    @Autowired
-    VoteRepository voteRepository;
+    final UserRepository userRepository;
+    final RsEventRspository rsEventRepository;
+    final VoteRepository voteRepository;
 
 
-    public RsController() {
+    public RsController(UserRepository userRepository, RsEventRspository rsEventRepository, VoteRepository voteRepository) {
+        this.userRepository = userRepository;
+        this.rsEventRepository = rsEventRepository;
+        this.voteRepository = voteRepository;
     }
 
     @GetMapping("/rs/{index}")

@@ -23,5 +23,5 @@ public interface VoteRepository extends CrudRepository<VoteEntity, Integer> {
 //    @Query("select v from VoteEntity v where v.voteTime between :timeStart and :timeEnd")
 //    List<VoteEntity> getVotesBewteenTime(LocalDateTime timeStart, LocalDateTime timeEnd);
     @Query(value = "select * from vote where vote_time between :timeStart and :timeEnd", nativeQuery = true)
-    List<VoteEntity> getVotesBewteenTime(@Param("timeStart")LocalDateTime timeStart, @Param("timeEnd")LocalDateTime timeEnd);
+    List<VoteEntity> getVotesBewteenTime(@Param("timeStart")Long timeStart, @Param("timeEnd")Long timeEnd);
 }

@@ -19,7 +19,7 @@ public class VoteEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer voteId;
-    private LocalDateTime voteTime;
+    private Long voteTime;
     private Integer userId;
     private Integer eventId;
     private Integer voteNum;

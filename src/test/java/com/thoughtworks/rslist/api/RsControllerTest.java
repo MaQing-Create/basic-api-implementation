@@ -18,6 +18,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -48,13 +49,18 @@ class RsControllerTest {
     private RsEvent event1 = new RsEvent("第一条事件", "政治", 1);
     private RsEvent event2 = new RsEvent("第二条事件", "科技", 1);
     private RsEvent event3 = new RsEvent("第三条事件", "经济", 1);
+    private int userId;
 
     @BeforeEach
     void setUp() {
         voteRepository.deleteAll();
         userRepository.deleteAll();
         rsEventRepository.deleteAll();
-        userRepository.save(new UserEntity(admin));
+        UserEntity thisUserEntity = userRepository.save(new UserEntity(admin));
+        userId = thisUserEntity.getUserId();
+        event1.setUserId(userId);
+        event2.setUserId(userId);
+        event3.setUserId(userId);
         rsEventRepository.save(new RsEventEntity(event1));
         rsEventRepository.save(new RsEventEntity(event2));
         rsEventRepository.save(new RsEventEntity(event3));
@@ -72,8 +78,6 @@ class RsControllerTest {
                 , is("科技"))).andExpect(jsonPath("$", not(hasKey("user")))).andExpect(status().isOk());
         mockMvc.perform(get("/rs/3")).andExpect(jsonPath("$.eventName", is("第三条事件"))).andExpect(jsonPath("$.keyWord"
                 , is("经济"))).andExpect(jsonPath("$", not(hasKey("user")))).andExpect(status().isOk());
-
-
     }
 
     @Test
@@ -98,7 +102,7 @@ class RsControllerTest {
 
     @Test
     void shouldAddOneRs() throws Exception {
-        RsEvent newRsEvent = new RsEvent("第四条事件", "军事", 1);
+        RsEvent newRsEvent = new RsEvent("第四条事件", "军事", userId);
         ObjectMapper objectMapper = new ObjectMapper();
 
         String eventJson = objectMapper.writeValueAsString(newRsEvent);
@@ -142,7 +146,7 @@ class RsControllerTest {
 
     @Test
     void shouldAddRsFailWhenEventNameIsNull() throws Exception {
-        RsEvent newRsEvent = new RsEvent(null, "军事", 1);
+        RsEvent newRsEvent = new RsEvent(null, "军事", userId);
 
         ObjectMapper objectMapper = new ObjectMapper();
         String eventJson = objectMapper.writeValueAsString(newRsEvent);
@@ -152,7 +156,7 @@ class RsControllerTest {
 
     @Test
     void shouldAddRsFailWhenKeywordIsNull() throws Exception {
-        RsEvent newRsEvent = new RsEvent("第四条事件", null, 1);
+        RsEvent newRsEvent = new RsEvent("第四条事件", null, userId);
 
         ObjectMapper objectMapper = new ObjectMapper();
         String eventJson = objectMapper.writeValueAsString(newRsEvent);
@@ -262,23 +266,27 @@ class RsControllerTest {
 
     @Test
     void canVoteRs() throws Exception {
+        DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS");
         userRepository.save(new UserEntity(admin));
-        RsEvent newRsEvent = new RsEvent("第四条事件", "军事", 1);
+        RsEvent newRsEvent = new RsEvent("第四条事件", "军事", userId);
         rsEventRepository.save(new RsEventEntity(newRsEvent));
-        String eventJson = "{\"voteNum\":5, \"userId\":1, \"voteTime\":\"" + LocalDateTime.now() + "\"}";
+        Long voteTime = Long.parseLong(df.format(LocalDateTime.now()));
+        String eventJson = "{\"voteNum\":5, \"userId\":" + userId + ", \"voteTime\":\"" + voteTime + "\"}";
         mockMvc.perform(post("/rs/vote/1").content(eventJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
         List<VoteEntity> votes = voteRepository.findAll();
         assertEquals(1, votes.size());
-        assertEquals(1, votes.get(0).getUserId());
+        assertEquals(userId, votes.get(0).getUserId());
         assertEquals(1, votes.get(0).getEventId());
     }
 
     @Test
     void cannotVoteRsWhenVoteIsNotEnough() throws Exception {
+        DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS");
         userRepository.save(new UserEntity(admin));
-        RsEvent newRsEvent = new RsEvent("第四条事件", "军事", 1);
+        RsEvent newRsEvent = new RsEvent("第四条事件", "军事", userId);
         rsEventRepository.save(new RsEventEntity(newRsEvent));
-        String eventJson = "{\"voteNum\":15, \"userId\":1, \"voteTime\":\"" + LocalDateTime.now() + "\"}";
+        Long voteTime = Long.parseLong(df.format(LocalDateTime.now()));
+        String eventJson = "{\"voteNum\":15, \"userId\":" + userId + ", \"voteTime\":" + voteTime + "}";
         mockMvc.perform(post("/rs/vote/1").content(eventJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isBadRequest());
     }
 

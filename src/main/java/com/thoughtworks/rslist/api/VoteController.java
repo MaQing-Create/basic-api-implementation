@@ -30,19 +30,25 @@ public class VoteController {
 
     @Autowired
     UserRepository userRepository;
-
     @Autowired
     RsEventRspository rsEventRepository;
-
     @Autowired
     VoteRepository voteRepository;
 
+//    final UserRepository userRepository;
+//    final RsEventRspository rsEventRepository;
+//    final VoteRepository voteRepository;
+//
+//    public VoteController(RsEventRspository rsEventRepository, UserRepository userRepository, VoteRepository voteRepository) {
+//        this.rsEventRepository = rsEventRepository;
+//        this.userRepository = userRepository;
+//        this.voteRepository = voteRepository;
+//    }
+
     @GetMapping("/votes")
-    ResponseEntity<List> getVotesBewteenTime(@RequestParam String start, @RequestParam String end) {
-        DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
-        LocalDateTime timeStart = LocalDateTime.parse(start, df);
-        LocalDateTime timeEnd = LocalDateTime.parse(end, df);
+    ResponseEntity<List> getVotesBewteenTime(@RequestParam Long timeStart, @RequestParam Long timeEnd) {
         List<VoteEntity> lits1 = voteRepository.getVotesBewteenTime(timeStart, timeEnd);
+        List test = voteRepository.getVotesBewteenTime(timeStart, timeEnd);
         return ResponseEntity.ok(voteRepository.getVotesBewteenTime(timeStart, timeEnd).stream().map(voteEntity -> new Vote(voteEntity)).collect(Collectors.toList()));
     }
 

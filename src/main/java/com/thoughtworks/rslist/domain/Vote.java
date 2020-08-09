@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Builder
 public class Vote {
 
-    private LocalDateTime voteTime;
+    private Long voteTime;
     private Integer userId;
     private Integer eventId;
     private Integer voteNum;

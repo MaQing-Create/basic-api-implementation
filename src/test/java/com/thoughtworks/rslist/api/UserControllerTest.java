@@ -45,13 +45,18 @@ public class UserControllerTest {
     private RsEvent event1 = new RsEvent("第一条事件", "政治", 1);
     private RsEvent event2 = new RsEvent("第二条事件", "科技", 1);
     private RsEvent event3 = new RsEvent("第三条事件", "经济", 1);
+    private int userId;
 
     @BeforeEach
     void setUp() {
         voteRepository.deleteAll();
         userRepository.deleteAll();
         rsEventRepository.deleteAll();
-        userRepository.save(new UserEntity(admin));
+        UserEntity thisUserEntity = userRepository.save(new UserEntity(admin));
+        userId = thisUserEntity.getUserId();
+        event1.setUserId(userId);
+        event2.setUserId(userId);
+        event3.setUserId(userId);
         rsEventRepository.save(new RsEventEntity(event1));
         rsEventRepository.save(new RsEventEntity(event2));
         rsEventRepository.save(new RsEventEntity(event3));
@@ -87,7 +92,7 @@ public class UserControllerTest {
         ObjectMapper objectMapper = new ObjectMapper();
         String userJson = objectMapper.writeValueAsString(user);
         mockMvc.perform(post("/user").content(userJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isCreated());
-        assertEquals("userName", userRepository.getUsersByUserId(2).getUserName());
+        assertEquals("userName", userRepository.getUsersByUserId(userId + 1).getUserName());
     }
 
     @Test
@@ -131,7 +136,7 @@ public class UserControllerTest {
         User user = new User("userName", 18, "male", "useremail.com", "10123456789");
         ObjectMapper objectMapper = new ObjectMapper();
         String userJson = objectMapper.writeValueAsString(user);
-        mockMvc.perform(post("/user").content(userJson).contentType(MediaType.APPLICATION_JSON)).andExpect(jsonPath("$.error",is("invalid user"))).andExpect(status().isBadRequest());
+        mockMvc.perform(post("/user").content(userJson).contentType(MediaType.APPLICATION_JSON)).andExpect(jsonPath("$.error", is("invalid user"))).andExpect(status().isBadRequest());
     }
 
     @Test
@@ -155,7 +160,7 @@ public class UserControllerTest {
         String userJson = objectMapper.writeValueAsString(user);
 
         mockMvc.perform(post("/user").content(userJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isCreated());
-        mockMvc.perform(get("/user/2")).andExpect(jsonPath("$.userName",is("userName"))).andExpect(status().isOk());
+        mockMvc.perform(get("/user/" + (userId + 1))).andExpect(jsonPath("$.userName", is("userName"))).andExpect(status().isOk());
     }
 
     @Test
@@ -166,19 +171,19 @@ public class UserControllerTest {
 
         mockMvc.perform(post("/user").content(userJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isCreated());
         assertEquals(userRepository.count(), 2);
-        mockMvc.perform(delete("/user/2")).andExpect(status().isOk());
+        mockMvc.perform(delete("/user/" + (userId + 1))).andExpect(status().isOk());
         assertEquals(userRepository.count(), 1);
     }
 
     @Test
-    void shouldDeleteRsWhenDeleteUser(){
-        RsEvent newRsEvent = new RsEvent("第四条事件", "军事", 1);
+    void shouldDeleteRsWhenDeleteUser() {
+        RsEvent newRsEvent = new RsEvent("第四条事件", "军事", userId);
         rsEventRepository.save(new RsEventEntity(newRsEvent));
-        assertEquals(1,userRepository.findAll().size());
-        assertEquals(4,rsEventRepository.findAll().size());
-        userRepository.deleteByUserId(1);
-        assertEquals(0,userRepository.findAll().size());
-        assertEquals(0,rsEventRepository.findAll().size());
+        assertEquals(1, userRepository.findAll().size());
+        assertEquals(4, rsEventRepository.findAll().size());
+        userRepository.deleteByUserId(userId);
+        assertEquals(0, userRepository.findAll().size());
+        assertEquals(0, rsEventRepository.findAll().size());
     }
 
 }

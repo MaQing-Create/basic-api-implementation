@@ -16,6 +16,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -50,13 +52,19 @@ public class VoteControllerTest {
     private RsEvent event1 = new RsEvent("第一条事件", "政治", 1);
     private RsEvent event2 = new RsEvent("第二条事件", "科技", 1);
     private RsEvent event3 = new RsEvent("第三条事件", "经济", 1);
+    private int userId;
+
 
     @BeforeEach
     void setUp() {
         voteRepository.deleteAll();
         userRepository.deleteAll();
         rsEventRepository.deleteAll();
-        userRepository.save(new UserEntity(admin));
+        UserEntity thisUserEntity = userRepository.save(new UserEntity(admin));
+        userId = thisUserEntity.getUserId();
+        event1.setUserId(userId);
+        event2.setUserId(userId);
+        event3.setUserId(userId);
         rsEventRepository.save(new RsEventEntity(event1));
         rsEventRepository.save(new RsEventEntity(event2));
         rsEventRepository.save(new RsEventEntity(event3));
@@ -64,16 +72,19 @@ public class VoteControllerTest {
 
     @Test
     void shouldReturnAllVotesBewteen() throws Exception {
-        LocalDateTime timeStart = LocalDateTime.now();
-        String eventJson = "{\"voteNum\":1, \"userId\":1, \"voteTime\":\"" + LocalDateTime.now() + "\"}";
+        DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS");
+
+        Long voteTime1 = Long.parseLong(df.format(LocalDateTime.now()));
+        String eventJson = "{\"voteNum\":1, \"userId\":1, \"voteTime\":" + voteTime1 + "}";
         mockMvc.perform(post("/rs/vote/1").content(eventJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
-        LocalDateTime timeEnd = LocalDateTime.now();
-        eventJson = "{\"voteNum\":2, \"userId\":1, \"voteTime\":\"" + LocalDateTime.now() + "\"}";
+        Long voteTime2 = Long.parseLong(df.format(LocalDateTime.now()));
+        eventJson = "{\"voteNum\":2, \"userId\":1, \"voteTime\":" + voteTime2 + "}";
         mockMvc.perform(post("/rs/vote/1").content(eventJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
-        eventJson = "{\"voteNum\":3, \"userId\":1, \"voteTime\":\"" + LocalDateTime.now() + "\"}";
+        Long voteTime3 = Long.parseLong(df.format(LocalDateTime.now()));
+        eventJson = "{\"voteNum\":3, \"userId\":1, \"voteTime\":" + voteTime3 + "}";
         mockMvc.perform(post("/rs/vote/1").content(eventJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
-        DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
-        mockMvc.perform(get("/votes?start=" + df.format(timeStart) + "&end=" + df.format(timeEnd))).andExpect(jsonPath("$",
+        mockMvc.perform(get("/votes?timeStart=" + voteTime1 + "&timeEnd=" + voteTime2)).andExpect(jsonPath("$",
                 hasSize(2))).andExpect(status().isOk());
     }
 }
+

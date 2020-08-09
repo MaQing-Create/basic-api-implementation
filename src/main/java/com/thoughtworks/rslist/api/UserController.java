@@ -33,16 +33,14 @@ public class UserController {
     private List<User> userList;
     private User admin = new User("admin", 18, "male", "admin@email.com", "10123456789");
 
-    @Autowired
-    UserRepository userRepository;
+    final UserRepository userRepository;
+    final RsEventRspository rsEventRepository;
+    final VoteRepository voteRepository;
 
-    @Autowired
-    RsEventRspository rsEventRepository;
-
-    @Autowired
-    VoteRepository voteRepository;
-
-    public UserController() {
+    public UserController(UserRepository userRepository, RsEventRspository rsEventRepository, VoteRepository voteRepository) {
+        this.userRepository = userRepository;
+        this.rsEventRepository = rsEventRepository;
+        this.voteRepository = voteRepository;
     }
 
     @PostMapping("/user")
